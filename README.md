@@ -53,6 +53,8 @@ npm run test:neon -- --base=https://<your-function-url>   # a live deployment
 
 `scripts/smoke-test.js` reads `llm` from the target's `/api/health` rather than from your shell, so the open-ended question asserts a canned fallback or a real model reply depending on what the machine under test actually has.
 
+A run cleans up its own account, so test data disappears with it — unless the run aborts partway, as a dropped connection to a live target can. `node scripts/clean-verify-accounts.js --like='smoke+%'` shows what is left and adds `--delete` to remove it; it only ever matches `@example.com` addresses, so no pattern reaches a real account.
+
 ## Container
 
 The image is just the server — schema and knowledge base stay an explicit step:
@@ -174,6 +176,8 @@ scripts/smoke-test.js     end-to-end API + engine tests (npm test)
 scripts/build-icons.js    rasterises the logo into public/icons (npm run icons)
 scripts/build-function.mjs inlines public/ into the Function entry (npm run function:build)
 scripts/neon-env.mjs      prepares .env.neon for deploy (npm run neon:env)
+scripts/set-env-key.mjs   writes a secret into the gitignored env files from a value file
+scripts/clean-verify-accounts.js deletes the throwaway accounts verification runs leave behind
 src/server.js             Express app, security headers, static hosting
 src/services.js           the API core both transports share: SQL, validation, SSE events
 src/auth.js               JWT + rate limiter, shared by both transports
