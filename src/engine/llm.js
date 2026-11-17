@@ -82,6 +82,12 @@ function enabled() {
   return active() !== null;
 }
 
+// Which providers hold a key. Names only, so a deploy can prove a secret landed without
+// any endpoint that could echo a value back.
+function configured() {
+  return providers.filter((p) => p.key()).map((p) => p.name);
+}
+
 async function complete({ history, memories = [] }) {
   const provider = active();
   if (!provider) throw new Error('No LLM provider is configured');
@@ -90,4 +96,4 @@ async function complete({ history, memories = [] }) {
   return { text, model, provider: provider.name };
 }
 
-module.exports = { enabled, complete, providerName: () => active()?.name || null };
+module.exports = { enabled, complete, configured, providerName: () => active()?.name || null };

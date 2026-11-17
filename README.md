@@ -142,7 +142,7 @@ Every reply stores metadata (`intent`, `sources`, `latency_ms`, `engine`) in `me
 | `NEXYL_LLM_PROVIDER` | `gemini` or `openai`. Overrides the preference order; an unknown name disables the fallback. | unset |
 | `PG_POOL_MAX` | Connection cap per process/isolate | `10` (`3` on Neon) |
 
-**Provider choice.** `src/engine/llm.js` holds one small adapter per API dialect (`gemini`, `openai`) behind a single `{ enabled(), complete() }` interface, so skills and routes never mention a vendor. With both keys set Gemini wins; `NEXYL_LLM_PROVIDER` forces the other. `/api/health` reports `llm_provider`, and each answer records `provider` plus `model` in `messages.meta`. A provider that errors (quota, outage) makes the engine return its canned fallback rather than failing the request.
+**Provider choice.** `src/engine/llm.js` holds one small adapter per API dialect (`gemini`, `openai`) behind a single `{ enabled(), complete(), providerName(), configured() }` interface, so skills and routes never mention a vendor. With both keys set Gemini wins; `NEXYL_LLM_PROVIDER` forces the other. `/api/health` reports `llm_provider` (which one answers) and `llm_keys` (which ones a deploy actually carried — provider names, never values), and each answer records `provider` plus `model` in `messages.meta`. A provider that errors (quota, outage) makes the engine return its canned fallback rather than failing the request.
 
 `.env.neon` is a second, git-ignored file written by `neon env pull` and `scripts/neon-env.mjs`; it is the deploy-time input for Function env, not something the local server reads.
 
@@ -161,7 +161,7 @@ All routes except `/api/auth/*` and `/api/health` need `Authorization: Bearer <t
 | POST | `/api/conversations/:id/messages` | `{content, timezone}` → **SSE stream** (`user`, `token`, `done`, `error`) |
 | POST | `/api/messages/:id/feedback` | `{rating: 1 \| -1 \| 0}` |
 | GET / DELETE | `/api/memories[/:id]` | List / forget memories |
-| GET | `/api/health` | DB + engine status, including whether an LLM key is loaded |
+| GET | `/api/health` | DB + engine status, plus which LLM provider keys are loaded |
 
 ## Project layout
 

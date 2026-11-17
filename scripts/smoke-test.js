@@ -36,7 +36,9 @@ async function startTarget() {
     const live = await fetch(`${url}/api/health`).then((r) => r.json()).catch(() => null);
     if (!live) throw new Error(`--base target ${url} is not answering /api/health`);
     if (typeof live.llm !== 'boolean') throw new Error(`--base target ${url} has no boolean llm flag in /api/health`);
-    console.log(`target ${url} · engine ${live.engine} · db ${live.db} · llm ${live.llm}`);
+    // Which provider keys a deploy actually carried is only visible from the target itself.
+    const keys = Array.isArray(live.llm_keys) ? live.llm_keys.join(',') : 'none';
+    console.log(`target ${url} · engine ${live.engine} · db ${live.db} · llm ${live.llm} (${keys})`);
     return { base: url, llm: live.llm, stop() {} };
   }
 
