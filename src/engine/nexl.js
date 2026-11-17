@@ -14,7 +14,7 @@ const ENGINE_VERSION = 'nexl-1.0';
 const FALLBACK =
   "I don't have a good answer for that yet. I'm strongest at: knowledge questions (try \"what is PostgreSQL\"), " +
   'maths ("calculate 15% of 240" → "0.15 * 240"), remembering things, and summarising text. ' +
-  'Add an `ANTHROPIC_API_KEY` to the server\'s `.env` to unlock open-ended chat.';
+  'Add a `GEMINI_API_KEY` to the server\'s `.env` to unlock open-ended chat.';
 
 async function respond({ userId, userName, timezone, history, message }) {
   const started = Date.now();

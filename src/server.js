@@ -49,7 +49,7 @@ const PORT = Number(process.env.PORT) || 3000;
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`Nexl AI (${ENGINE_VERSION}) running → http://localhost:${PORT}`);
-    console.log(`LLM fallback: ${llm.enabled() ? 'enabled (OpenRouter)' : 'disabled (set OPENROUTER_API_KEY to enable)'}`);
+    console.log(`LLM fallback: ${llm.enabled() ? 'enabled (Gemini)' : 'disabled (set GEMINI_API_KEY to enable)'}`);
   });
 }
 

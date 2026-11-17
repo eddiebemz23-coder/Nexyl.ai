@@ -43,7 +43,7 @@ Run the end-to-end tests (needs the migrated database): `npm test`
 | `what is PostgreSQL`, `how does the Nexl engine work` | Knowledge base | Postgres full-text search (`tsvector` + GIN, `ts_rank_cd`) |
 | `summarize: <long text>` | Summariser | Extractive, word-frequency scoring |
 | `what time is it` | Clock | Uses your browser's timezone |
-| anything else | LLM (optional) | Enabled by `OPENROUTER_API_KEY` |
+| anything else | LLM (optional) | Enabled by `GEMINI_API_KEY` |
 
 Every reply stores metadata (`intent`, `sources`, `latency_ms`, `engine`) in `messages.meta` and shows it as chips under the answer.
 
@@ -54,9 +54,9 @@ Every reply stores metadata (`intent`, `sources`, `latency_ms`, `engine`) in `me
 | `DATABASE_URL` | Postgres connection string | `postgres://postgres@localhost:5432/nexl` |
 | `JWT_SECRET` | Signs login tokens. **Set a long random value.** | random per start |
 | `PORT` | HTTP port | `3000` |
-| `OPENROUTER_API_KEY` | Enables the LLM fallback for open-ended chat | unset (off) |
-| `NEXL_LLM_MODEL` | OpenRouter model slug used by the fallback | `anthropic/claude-sonnet-5.5` |
-| `LLM_BASE_URL` | Override the provider endpoint | `https://openrouter.ai/api/v1` |
+| `GEMINI_API_KEY` | Enables the LLM fallback for open-ended chat | unset (off) |
+| `NEXL_LLM_MODEL` | Gemini model name used by the fallback | `gemini-flash-lite-latest` |
+| `LLM_BASE_URL` | Override the provider endpoint | `https://generativelanguage.googleapis.com/v1beta` |
 
 ## API
 

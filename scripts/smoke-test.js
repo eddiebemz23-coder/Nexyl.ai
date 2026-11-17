@@ -3,6 +3,9 @@
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'smoke-test-secret';
 const app = require('../src/server');
 const db = require('../src/db');
+const llm = require('../src/engine/llm');
+
+const LLM_ON = llm.enabled();
 
 let passed = 0, failed = 0;
 const check = (name, ok, detail = '') => {
@@ -73,7 +76,7 @@ async function sse(res) {
       ['remember that my favourite colour is teal', 'remember', (t) => /teal/.test(t)],
       ['what do you remember about me', 'recall', (t) => /teal/.test(t)],
       ['summarize: PostgreSQL is a database. It is reliable and open source. Many companies use it for production workloads every day. It supports JSON documents and full text search. It also offers strong transactional guarantees for critical data.', 'summarize', (t) => /Summary/.test(t)],
-      ['zzqxv blorp wibble', 'fallback', () => true],
+      ['zzqxv blorp wibble', LLM_ON ? 'llm' : 'fallback', (t) => t.trim().length > 12],
     ];
     for (const [q, intent, verify] of cases) {
       const done = await ask(q);

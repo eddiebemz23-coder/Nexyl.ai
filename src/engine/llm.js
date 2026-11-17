@@ -1,36 +1,36 @@
-// Optional LLM provider via OpenRouter. If OPENROUTER_API_KEY is set, Nexl uses it for
+// Optional LLM provider via the Google Gemini API. If GEMINI_API_KEY is set, Nexl uses it for
 // open-ended questions that none of the local skills could answer. Otherwise this is a no-op.
 
 const SYSTEM_PROMPT =
   'You are Nexl AI, a friendly, concise assistant inside a web chat app built with JavaScript and PostgreSQL. ' +
   'Answer clearly in a few short paragraphs. Use Markdown sparingly. If you are unsure, say so.';
 
-const BASE_URL = process.env.LLM_BASE_URL || 'https://openrouter.ai/api/v1';
+const API_HOST = process.env.LLM_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta';
 
 function enabled() {
-  return Boolean(process.env.OPENROUTER_API_KEY);
+  return Boolean(process.env.GEMINI_API_KEY);
 }
 
 async function complete({ history, memories = [] }) {
-  const model = process.env.NEXL_LLM_MODEL || 'anthropic/claude-sonnet-5.5';
+  // Pinned 2.5 slugs return 404 for keys issued after their retirement; the -latest alias survives that.
+  const model = process.env.NEXL_LLM_MODEL || 'gemini-flash-lite-latest';
   const system =
     SYSTEM_PROMPT +
     (memories.length ? '\n\nThings the user asked you to remember:\n' + memories.map((m) => `- ${m}`).join('\n') : '');
 
-  const res = await fetch(`${BASE_URL}/chat/completions`, {
+  const res = await fetch(`${API_HOST}/models/${model}:generateContent`, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
-      authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-      'x-title': 'Nexl AI',
+      'x-goog-api-key': process.env.GEMINI_API_KEY,
     },
     body: JSON.stringify({
-      model,
-      max_tokens: 700,
-      messages: [
-        { role: 'system', content: system },
-        ...history.slice(-12).map((m) => ({ role: m.role, content: m.content })),
-      ],
+      systemInstruction: { parts: [{ text: system }] },
+      contents: history.slice(-12).map((m) => ({
+        role: m.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: m.content }],
+      })),
+      generationConfig: { maxOutputTokens: 700 },
     }),
   });
   if (!res.ok) {
@@ -38,7 +38,9 @@ async function complete({ history, memories = [] }) {
     throw new Error(`LLM request failed (${res.status}) ${detail.slice(0, 200)}`);
   }
   const data = await res.json();
-  const text = (data.choices || []).map((c) => (c.message && c.message.content) || '').join('');
+  const parts = ((data.candidates || [])[0] || {}).content?.parts || [];
+  const text = parts.filter((p) => p.text).map((p) => p.text).join('');
+  if (!text) throw new Error('LLM returned no text (blocked or truncated)');
   return { text, model };
 }
 
