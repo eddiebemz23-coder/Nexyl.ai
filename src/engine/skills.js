@@ -118,6 +118,11 @@ function doSmallTalk(text, ctx) {
 }
 
 /* ---------- Knowledge base (Postgres full-text search) ---------- */
+// Measured on the seeded base: genuine questions rank 1.3–4.6, while an unrelated prompt that
+// merely shares a common word ("write a four-line poem about rain" → 0.2) ranks far below. Without
+// a floor the OR fallback dumps an article for any creative request and the LLM never sees it.
+const MIN_KB_RANK = 0.6;
+
 async function searchKB(text) {
   const q = text.replace(/^(what|who|how|why|when|where)('s| is| are| does| do| to)?\s+(a |an |the )?/i, '').replace(/[?!.]+$/, '').trim() || text;
   const { rows } = await db.query(
@@ -138,9 +143,14 @@ async function searchKB(text) {
         WHERE tsv @@ to_tsquery('english', $1)
         ORDER BY rank DESC LIMIT 3`,
       [terms.map((w) => w.replace(/[^a-z0-9]/g, '')).filter(Boolean).join(' | ')]);
-    return loose.rows.length ? loose.rows : null;
+    return strong(loose.rows);
   }
-  return rows;
+  return strong(rows);
+}
+
+function strong(rows) {
+  const kept = rows.filter((r) => Number(r.rank) >= MIN_KB_RANK);
+  return kept.length ? kept : null;
 }
 
 async function doKnowledge(text) {

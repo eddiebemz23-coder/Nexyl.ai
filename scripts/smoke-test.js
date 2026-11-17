@@ -133,6 +133,8 @@ async function startTarget() {
       ['what do you remember about me', 'recall', (t) => /teal/.test(t)],
       ['summarize: PostgreSQL is a database. It is reliable and open source. Many companies use it for production workloads every day. It supports JSON documents and full text search. It also offers strong transactional guarantees for critical data.', 'summarize', (t) => /Summary/.test(t)],
       ['zzqxv blorp wibble', LLM_ON ? 'llm' : 'fallback', (t) => t.trim().length > 12],
+      // A creative prompt shares words with KB articles but must not be answered from them.
+      ['write a four-line poem about rain', LLM_ON ? 'llm' : 'fallback', (t) => t.trim().length > 12],
     ];
     for (const [q, intent, verify] of cases) {
       const done = await ask(q);
