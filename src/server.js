@@ -45,7 +45,7 @@ const PORT = Number(process.env.PORT) || 3000;
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`Nexyl AI (${ENGINE_VERSION}) running → http://localhost:${PORT}`);
-    console.log(`LLM fallback: ${llm.enabled() ? 'enabled (Gemini)' : 'disabled (set GEMINI_API_KEY to enable)'}`);
+    console.log(`LLM fallback: ${llm.providerName() || 'disabled (set GEMINI_API_KEY or OPENAI_API_KEY)'}`);
   });
 }
 

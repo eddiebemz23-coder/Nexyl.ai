@@ -42,7 +42,7 @@ async function respond({ userId, userName, timezone, history, message }) {
       const { rows } = await db.query(
         'SELECT fact FROM memories WHERE user_id = $1 ORDER BY id DESC LIMIT 20', [userId]);
       const out = await llm.complete({ history, memories: rows.map((r) => r.fact) });
-      result = { text: out.text, meta: { intent: 'llm', model: out.model } };
+      result = { text: out.text, meta: { intent: 'llm', model: out.model, provider: out.provider } };
     } catch (err) {
       console.error('[engine] LLM error:', err.message);
       result = { text: FALLBACK, meta: { intent: 'fallback', llm_error: true } };

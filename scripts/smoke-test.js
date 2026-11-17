@@ -162,6 +162,22 @@ async function startTarget() {
     r = await api(`/api/conversations/${convo.id}/messages`, { method: 'POST', token, body: { content: 'x'.repeat(5000) } });
     check('rejects oversized messages', r.status === 400);
 
+    console.log('\nLLM provider');
+    if (process.env.GEMINI_API_KEY && process.env.OPENAI_API_KEY) {
+      const saved = process.env.NEXYL_LLM_PROVIDER;
+      const pick = (v) => {
+        if (v === undefined) delete process.env.NEXYL_LLM_PROVIDER;
+        else process.env.NEXYL_LLM_PROVIDER = v;
+        return llm.providerName();
+      };
+      check('prefers gemini when both keys are set', pick(saved) === 'gemini', llm.providerName());
+      check('NEXYL_LLM_PROVIDER switches provider', pick('openai') === 'openai');
+      check('drops an unknown provider', pick('mistral') === null);
+      pick(saved);
+    } else {
+      console.log('  · skipped: needs both GEMINI_API_KEY and OPENAI_API_KEY');
+    }
+
     console.log('\nCleanup');
     r = await api(`/api/conversations/${convo.id}`, { method: 'DELETE', token });
     check('deletes a conversation', r.status === 204);

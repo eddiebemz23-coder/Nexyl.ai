@@ -13,12 +13,14 @@ export default defineConfig({
       name: 'nexyl api + frontend',
       source: 'src/function/index.mjs',
       // Values come from .env.neon (`npm run neon:env`). A missing value is undefined and
-      // defineConfig throws rather than uploading an empty secret.
+      // defineConfig throws rather than uploading an empty secret. The OpenAI key is optional,
+      // so it is only forwarded when present; Gemini stays the default provider either way.
       env: {
         JWT_SECRET: process.env.JWT_SECRET!,
         GEMINI_API_KEY: process.env.GEMINI_API_KEY!,
         NEXYL_LLM_MODEL: process.env.NEXYL_LLM_MODEL!,
         PG_POOL_MAX: process.env.PG_POOL_MAX!,
+        ...(process.env.OPENAI_API_KEY ? { OPENAI_API_KEY: process.env.OPENAI_API_KEY } : {}),
       },
     },
   },

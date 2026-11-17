@@ -90,8 +90,8 @@ npm run test:neon -- --base=https://<branch>-api.compute.<cell>.<region>.aws.neo
 
 What each piece does:
 
-- `neon.ts` declares the `api` function, its entry `src/function/index.mjs`, and the four env keys it uploads. It is Neon's Terraform-equivalent config; `neon config plan` shows the diff before you apply it.
-- `scripts/neon-env.mjs` keeps the connection strings `neon env pull` wrote and tops `.env.neon` up with `GEMINI_API_KEY` / `NEXYL_LLM_MODEL` copied from `.env`, a small `PG_POOL_MAX`, and a freshly minted `JWT_SECRET` — generated once and then preserved, so rotating a deploy never invalidates signed-in sessions. It prints key names and lengths, never values.
+- `neon.ts` declares the `api` function, its entry `src/function/index.mjs`, and the env keys it uploads. It is Neon's Terraform-equivalent config; `neon config plan` shows the diff before you apply it.
+- `scripts/neon-env.mjs` keeps the connection strings `neon env pull` wrote and tops `.env.neon` up with the LLM settings copied from `.env` (`GEMINI_API_KEY`, `OPENAI_API_KEY`, model and provider overrides), a small `PG_POOL_MAX`, and a freshly minted `JWT_SECRET` — generated once and then preserved, so rotating a deploy never invalidates signed-in sessions. It prints key names and lengths, never values.
 - `--no-env-pull` on `neon deploy` is not cosmetic: with the default, deploy overwrites `DATABASE_URL` in your local `.env` and quietly points development at the production database.
 
 Runtime shape worth knowing before you change this app:
@@ -122,7 +122,7 @@ npm run icons        # writes public/icons/
 | `what is PostgreSQL`, `how does the Nexyl engine work` | Knowledge base | Postgres full-text search (`tsvector` + GIN, `ts_rank_cd`) |
 | `summarize: <long text>` | Summariser | Extractive, word-frequency scoring |
 | `what time is it` | Clock | Uses your browser's timezone |
-| anything else | LLM (optional) | Enabled by `GEMINI_API_KEY` |
+| anything else | LLM (optional) | Enabled by `GEMINI_API_KEY` or `OPENAI_API_KEY` |
 
 Every reply stores metadata (`intent`, `sources`, `latency_ms`, `engine`) in `messages.meta` and shows it as chips under the answer.
 
@@ -135,8 +135,14 @@ Every reply stores metadata (`intent`, `sources`, `latency_ms`, `engine`) in `me
 | `PORT` | HTTP port (Express only; Neon Functions ignore it) | `3000` |
 | `GEMINI_API_KEY` | Enables the LLM fallback for open-ended chat | unset (off) |
 | `NEXYL_LLM_MODEL` | Gemini model name used by the fallback | `gemini-flash-lite-latest` |
-| `LLM_BASE_URL` | Override the provider endpoint | `https://generativelanguage.googleapis.com/v1beta` |
+| `LLM_BASE_URL` | Override the Gemini endpoint | `https://generativelanguage.googleapis.com/v1beta` |
+| `OPENAI_API_KEY` | Second fallback provider (Chat Completions) | unset (off) |
+| `NEXYL_OPENAI_MODEL` | OpenAI model name | `gpt-4.1-mini` |
+| `OPENAI_BASE_URL` | Override the OpenAI endpoint | `https://api.openai.com/v1` |
+| `NEXYL_LLM_PROVIDER` | `gemini` or `openai`. Overrides the preference order; an unknown name disables the fallback. | unset |
 | `PG_POOL_MAX` | Connection cap per process/isolate | `10` (`3` on Neon) |
+
+**Provider choice.** `src/engine/llm.js` holds one small adapter per API dialect (`gemini`, `openai`) behind a single `{ enabled(), complete() }` interface, so skills and routes never mention a vendor. With both keys set Gemini wins; `NEXYL_LLM_PROVIDER` forces the other. `/api/health` reports `llm_provider`, and each answer records `provider` plus `model` in `messages.meta`. A provider that errors (quota, outage) makes the engine return its canned fallback rather than failing the request.
 
 `.env.neon` is a second, git-ignored file written by `neon env pull` and `scripts/neon-env.mjs`; it is the deploy-time input for Function env, not something the local server reads.
 

@@ -40,7 +40,7 @@ async function ownConversation(id, userId) {
 async function health() {
   try {
     await db.query('SELECT 1');
-    return { body: { status: 'ok', engine: engine.ENGINE_VERSION, llm: llm.enabled(), db: 'up' } };
+    return { body: { status: 'ok', engine: engine.ENGINE_VERSION, llm: llm.enabled(), llm_provider: llm.providerName(), db: 'up' } };
   } catch {
     return { status: 503, body: { status: 'degraded', db: 'down' } };
   }

@@ -18,15 +18,17 @@ if (!existsSync(neonFile)) {
 }
 
 const local = existsSync(`${root}.env`) ? dotenv.parse(readFileSync(`${root}.env`)) : {};
-const wanted = {
-  GEMINI_API_KEY: local.GEMINI_API_KEY || '',
-  NEXYL_LLM_MODEL: local.NEXYL_LLM_MODEL || 'gemini-flash-lite-latest',
-  PG_POOL_MAX: '3',
-};
 
-if (!wanted.GEMINI_API_KEY) {
-  console.warn('[neon-env] no GEMINI_API_KEY in .env — the deployed app will answer with local skills only.');
-  delete wanted.GEMINI_API_KEY;
+// Whatever the local app uses to reach a model travels with the deploy, otherwise the two
+// environments would answer open-ended questions through different providers.
+const wanted = { PG_POOL_MAX: '3' };
+for (const key of ['GEMINI_API_KEY', 'NEXYL_LLM_MODEL', 'OPENAI_API_KEY', 'NEXYL_OPENAI_MODEL', 'NEXYL_LLM_PROVIDER']) {
+  if (local[key]) wanted[key] = local[key];
+}
+wanted.NEXYL_LLM_MODEL ||= 'gemini-flash-lite-latest';
+
+if (!wanted.GEMINI_API_KEY && !wanted.OPENAI_API_KEY) {
+  console.warn('[neon-env] no LLM key in .env — the deployed app will answer with local skills only.');
 }
 
 const lines = readFileSync(neonFile, 'utf8').split(/\r?\n/);
