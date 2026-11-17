@@ -46,3 +46,8 @@ jobs:
       - run: npm run migrate
 
       - run: npm test
+
+      # The Neon Function entrypoint is a second transport over the same core, so the
+      # identical suite runs against it too and the deployed shape cannot rot unnoticed.
+      - run: npm run function:build
+      - run: npm run test:function

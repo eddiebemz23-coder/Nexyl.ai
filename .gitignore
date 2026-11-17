@@ -1,4 +1,7 @@
 node_modules/
 .env
+.env.neon
+.neon
+src/function/assets.generated.mjs
 *.log
 .DS_Store

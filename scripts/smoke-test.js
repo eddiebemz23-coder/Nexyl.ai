@@ -1,11 +1,16 @@
-// End-to-end smoke test: boots the real app against the real database and exercises the API.
-// Usage: npm test   (requires DATABASE_URL pointing at a migrated database)
+// End-to-end smoke test: exercises the API over HTTP against a real database.
+// Usage:
+//   npm test                                  # Express server on a local port + local database
+//   npm run test:function                     # Neon Function entrypoint, bridged onto a local port
+//   node --env-file=.env.neon scripts/smoke-test.js --base=https://<function-url>   # a live deploy
+//   node scripts/smoke-test.js --base=http://localhost:3000
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'smoke-test-secret';
-const app = require('../src/server');
 const db = require('../src/db');
 const llm = require('../src/engine/llm');
 
-const LLM_ON = llm.enabled();
+// Which intent the gibberish case resolves to depends on whether *the target* has an LLM key,
+// so it is re-read from the target's /api/health below rather than trusted from this process.
+let LLM_ON = llm.enabled();
 
 let passed = 0, failed = 0;
 const check = (name, ok, detail = '') => {
@@ -24,9 +29,58 @@ async function sse(res) {
   return events;
 }
 
-(async () => {
+async function startTarget() {
+  const base = process.argv.find((a) => a.startsWith('--base='))?.slice(7);
+  if (base) {
+    const url = base.replace(/\/+$/, '');
+    const live = await fetch(`${url}/api/health`).then((r) => r.json()).catch(() => null);
+    if (!live) throw new Error(`--base target ${url} is not answering /api/health`);
+    if (typeof live.llm !== 'boolean') throw new Error(`--base target ${url} has no boolean llm flag in /api/health`);
+    console.log(`target ${url} · engine ${live.engine} · db ${live.db} · llm ${live.llm}`);
+    return { base: url, llm: live.llm, stop() {} };
+  }
+
+  if (process.argv.includes('--function')) {
+    // Neon Functions invoke the handler through fetch instead of a socket, so bridge it onto a
+    // local port here and let the same assertions drive both transports.
+    const { createServer } = require('node:http');
+    const { Readable } = require('node:stream');
+    const app = (await import('../src/function/index.mjs')).default;
+    const server = createServer((req, res) => {
+      const chunks = [];
+      req.on('data', (c) => chunks.push(c));
+      req.on('end', async () => {
+        try {
+          const hasBody = !['GET', 'HEAD'].includes(req.method);
+          const response = await app.fetch(
+            new Request(new URL(req.url, 'http://127.0.0.1'), {
+              method: req.method,
+              headers: req.headers,
+              body: hasBody && chunks.length ? Buffer.concat(chunks) : undefined,
+            })
+          );
+          res.writeHead(response.status, Object.fromEntries(response.headers));
+          if (response.body) Readable.fromWeb(response.body).pipe(res);
+          else res.end();
+        } catch (err) {
+          console.error('[bridge]', err);
+          res.writeHead(500).end();
+        }
+      });
+    });
+    await new Promise((r) => server.listen(0, r));
+    return { base: `http://127.0.0.1:${server.address().port}`, stop: () => new Promise((r) => server.close(r)) };
+  }
+
+  const app = require('../src/server');
   const server = app.listen(0);
-  const base = `http://127.0.0.1:${server.address().port}`;
+  return { base: `http://127.0.0.1:${server.address().port}`, stop: () => new Promise((r) => server.close(r)) };
+}
+
+(async () => {
+  const { base, stop, llm: liveLlm } = await startTarget();
+  if (liveLlm !== undefined) LLM_ON = liveLlm;
+  console.log(`target: ${base}`);
   const email = `smoke+${Date.now()}@example.com`;
   const api = async (path, { method = 'GET', body, token } = {}) =>
     fetch(base + path, {
@@ -116,7 +170,7 @@ async function sse(res) {
     failed++;
     console.error('Unexpected error:', err);
   } finally {
-    server.close();
+    await stop();
     await db.pool.end();
     console.log(`\n${passed} passed, ${failed} failed`);
     process.exit(failed ? 1 : 0);

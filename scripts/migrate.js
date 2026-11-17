@@ -1,6 +1,11 @@
 // Applies db/schema.sql and (re)seeds the knowledge base. Idempotent.
 const fs = require('fs');
 const path = require('path');
+
+// schema.sql is sent as one multi-statement query, which a pooled proxy may route across
+// connections; prefer the direct endpoint when the host provides one.
+if (process.env.DATABASE_URL_UNPOOLED) process.env.DATABASE_URL = process.env.DATABASE_URL_UNPOOLED;
+
 const db = require('../src/db');
 const articles = require('../db/seed-kb');
 

@@ -6,13 +6,19 @@
   "type": "commonjs",
   "scripts": {
     "migrate": "node scripts/migrate.js",
+    "migrate:neon": "node --env-file=.env.neon scripts/migrate.js",
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
     "test": "node scripts/smoke-test.js",
-    "icons": "node scripts/build-icons.js"
+    "test:function": "node scripts/smoke-test.js --function",
+    "icons": "node scripts/build-icons.js",
+    "function:build": "node scripts/build-function.mjs",
+    "neon:env": "node scripts/neon-env.mjs",
+    "neon:deploy": "npm run function:build && npm run neon:env && neon deploy --env .env.neon --no-env-pull",
+    "test:neon": "node --env-file=.env.neon scripts/smoke-test.js"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20.6"
   },
   "repository": {
     "type": "git",
@@ -25,9 +31,11 @@
   "author": "eddiebemz23-coder",
   "license": "MIT",
   "dependencies": {
+    "@neon/config": "^1.14.2",
     "bcryptjs": "^3.0.3",
     "dotenv": "^18.0.8",
     "express": "^5.3.0",
+    "hono": "^4.13.19",
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.23.1"
   }
