@@ -6,21 +6,28 @@
 // public HTTPS URL in the same region as the database (with DATABASE_URL injected).
 import { defineConfig } from '@neon/config/v1';
 
+// Optional settings travel only when present: an unset value must not be uploaded as an empty
+// string, which would delete the live key. Mirrors the passthrough list in scripts/neon-env.mjs.
+const optional = (keys: string[]) =>
+  Object.fromEntries(keys.filter((k) => process.env[k]).map((k) => [k, process.env[k]]));
+
 export default defineConfig({
   functions: {
     // Slug is the function's permanent identity and appears in its URL: ^[a-z0-9]{1,20}$
     api: {
       name: 'nexyl api + frontend',
       source: 'src/function/index.mjs',
-      // Values come from .env.neon (`npm run neon:env`). A missing value is undefined and
-      // defineConfig throws rather than uploading an empty secret. The OpenAI key is optional,
-      // so it is only forwarded when present; Gemini stays the default provider either way.
+      // Values come from .env.neon (`npm run neon:env`). A missing required value is undefined
+      // and defineConfig throws rather than uploading an empty secret.
       env: {
         JWT_SECRET: process.env.JWT_SECRET!,
         GEMINI_API_KEY: process.env.GEMINI_API_KEY!,
         NEXYL_LLM_MODEL: process.env.NEXYL_LLM_MODEL!,
         PG_POOL_MAX: process.env.PG_POOL_MAX!,
-        ...(process.env.OPENAI_API_KEY ? { OPENAI_API_KEY: process.env.OPENAI_API_KEY } : {}),
+        ...optional([
+          'OPENAI_API_KEY', 'GROQ_API_KEY', 'ANTHROPIC_API_KEY',
+          'NEXYL_LLM_PROVIDER', 'NEXYL_GROQ_MODEL', 'NEXYL_OPENAI_MODEL', 'NEXYL_ANTHROPIC_MODEL',
+        ]),
       },
     },
   },

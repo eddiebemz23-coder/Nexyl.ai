@@ -167,19 +167,20 @@ async function startTarget() {
     check('rejects oversized messages', r.status === 400);
 
     console.log('\nLLM provider');
-    if (process.env.GEMINI_API_KEY && process.env.OPENAI_API_KEY) {
+    if (['GROQ_API_KEY', 'GEMINI_API_KEY', 'OPENAI_API_KEY', 'ANTHROPIC_API_KEY'].every((k) => process.env[k])) {
       const saved = process.env.NEXYL_LLM_PROVIDER;
       const pick = (v) => {
         if (v === undefined) delete process.env.NEXYL_LLM_PROVIDER;
         else process.env.NEXYL_LLM_PROVIDER = v;
         return llm.providerName();
       };
-      check('prefers gemini when both keys are set', pick(saved) === 'gemini', llm.providerName());
-      check('NEXYL_LLM_PROVIDER switches provider', pick('openai') === 'openai');
+      check('prefers groq when every key is set', pick(saved) === 'groq', llm.providerName());
+      check('NEXYL_LLM_PROVIDER switches provider', pick('gemini') === 'gemini');
+      check('a pinned provider is honoured', pick('anthropic') === 'anthropic');
       check('drops an unknown provider', pick('mistral') === null);
       pick(saved);
     } else {
-      console.log('  · skipped: needs both GEMINI_API_KEY and OPENAI_API_KEY');
+      console.log('  · skipped: needs all four provider keys');
     }
 
     console.log('\nCleanup');

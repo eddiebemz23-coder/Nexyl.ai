@@ -1,5 +1,6 @@
-// Optional LLM fallback for questions no local skill answered. Two providers speak different
-// dialects of the same chat API, so each owns its own request/response handling.
+// Optional LLM fallback for questions no local skill answered. Four providers speak three
+// dialects of the same chat API; each owns its request/response handling and the engine tries
+// them in preference order until one answers, so a key with no credits cannot break chat.
 
 const SYSTEM_PROMPT =
   'You are Nexyl AI, a friendly, concise assistant inside a web chat app built with JavaScript and PostgreSQL. ' +
@@ -18,6 +19,42 @@ async function failure(res) {
   const detail = (await res.text().catch(() => '')).slice(0, 200);
   throw new Error(`LLM request failed (${res.status}) ${detail}`);
 }
+
+// OpenAI's Chat Completions dialect, which Groq also speaks.
+async function chatCompletions({ host, key, model, history, memories }) {
+  const res = await fetch(`${host}/chat/completions`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
+    body: JSON.stringify({
+      model,
+      max_tokens: MAX_OUTPUT_TOKENS,
+      messages: [{ role: 'system', content: context(memories) }, ...messages(history)],
+    }),
+  });
+  if (!res.ok) return failure(res);
+  const data = await res.json();
+  return { text: ((data.choices || [])[0] || {}).message?.content || '', model };
+}
+
+const openaiDialect = (name, keyEnv, modelEnv, defaultModel, hostEnv, defaultHost) => ({
+  name,
+  key: () => process.env[keyEnv],
+  model: () => process.env[modelEnv] || defaultModel,
+  complete({ history, memories }) {
+    return chatCompletions({
+      host: process.env[hostEnv] || defaultHost,
+      key: this.key(),
+      model: this.model(),
+      history,
+      memories,
+    });
+  },
+});
+
+// Groq's catalogue rotates: the classic llama slugs 404 for newer keys, so the default is a
+// model this key was observed serving. OpenAI and Anthropic keys here have no credit balance.
+const groq = openaiDialect('groq', 'GROQ_API_KEY', 'NEXYL_GROQ_MODEL', 'qwen/qwen3.8-27b', 'GROQ_BASE_URL', 'https://api.groq.com/openai/v1');
+const openai = openaiDialect('openai', 'OPENAI_API_KEY', 'NEXYL_OPENAI_MODEL', 'gpt-4.1-mini', 'OPENAI_BASE_URL', 'https://api.openai.com/v1');
 
 const gemini = {
   name: 'gemini',
@@ -46,34 +83,34 @@ const gemini = {
   },
 };
 
-const openai = {
-  name: 'openai',
-  key: () => process.env.OPENAI_API_KEY,
-  model: () => process.env.NEXYL_OPENAI_MODEL || 'gpt-4.1-mini',
+const anthropic = {
+  name: 'anthropic',
+  key: () => process.env.ANTHROPIC_API_KEY,
+  model: () => process.env.NEXYL_ANTHROPIC_MODEL || 'claude-sonnet-4-6',
   async complete({ history, memories }) {
     const model = this.model();
-    const host = process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1';
-    const res = await fetch(`${host}/chat/completions`, {
+    const host = process.env.ANTHROPIC_BASE_URL || 'https://api.anthropic.com/v1';
+    const res = await fetch(`${host}/messages`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json', authorization: `Bearer ${this.key()}` },
-      body: JSON.stringify({
-        model,
-        max_tokens: MAX_OUTPUT_TOKENS,
-        messages: [{ role: 'system', content: context(memories) }, ...messages(history)],
-      }),
+      headers: { 'content-type': 'application/json', 'x-api-key': this.key(), 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({ model, max_tokens: MAX_OUTPUT_TOKENS, system: context(memories), messages: messages(history) }),
     });
     if (!res.ok) return failure(res);
     const data = await res.json();
-    return { text: ((data.choices || [])[0] || {}).message?.content || '', model };
+    return { text: (data.content || []).filter((b) => b.type === 'text').map((b) => b.text).join(''), model };
   },
 };
 
-const providers = [gemini, openai];
+// Preference order: the providers observed answering first, credit-less keys last so they are
+// only reached when everything above them fails.
+const providers = [groq, gemini, openai, anthropic];
 
-// NEXYL_LLM_PROVIDER picks one by name; otherwise the first configured provider wins.
+const configuredProviders = () => providers.filter((p) => p.key());
+
+// NEXYL_LLM_PROVIDER pins one provider by name; otherwise the first configured one leads.
 function active() {
   const wanted = (process.env.NEXYL_LLM_PROVIDER || '').trim().toLowerCase();
-  const pool = providers.filter((p) => p.key());
+  const pool = configuredProviders();
   if (!wanted) return pool[0] || null;
   return pool.find((p) => p.name === wanted) || null;
 }
@@ -85,15 +122,26 @@ function enabled() {
 // Which providers hold a key. Names only, so a deploy can prove a secret landed without
 // any endpoint that could echo a value back.
 function configured() {
-  return providers.filter((p) => p.key()).map((p) => p.name);
+  return configuredProviders().map((p) => p.name);
 }
 
 async function complete({ history, memories = [] }) {
-  const provider = active();
-  if (!provider) throw new Error('No LLM provider is configured');
-  const { text, model } = await provider.complete({ history, memories });
-  if (!text) throw new Error('LLM returned no text (blocked or truncated)');
-  return { text, model, provider: provider.name };
+  const wanted = (process.env.NEXYL_LLM_PROVIDER || '').trim().toLowerCase();
+  const chain = wanted ? configuredProviders().filter((p) => p.name === wanted) : configuredProviders();
+  if (!chain.length) throw new Error('No LLM provider is configured');
+
+  let lastError;
+  for (const provider of chain) {
+    try {
+      const { text, model } = await provider.complete({ history, memories });
+      if (!text) throw new Error('LLM returned no text (blocked or truncated)');
+      return { text, model, provider: provider.name };
+    } catch (err) {
+      lastError = err;
+      console.error(`[llm] ${provider.name} failed:`, err.message);
+    }
+  }
+  throw lastError;
 }
 
 module.exports = { enabled, complete, configured, providerName: () => active()?.name || null };

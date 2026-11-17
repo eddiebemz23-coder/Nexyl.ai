@@ -22,12 +22,18 @@ const local = existsSync(`${root}.env`) ? dotenv.parse(readFileSync(`${root}.env
 // Whatever the local app uses to reach a model travels with the deploy, otherwise the two
 // environments would answer open-ended questions through different providers.
 const wanted = { PG_POOL_MAX: '3' };
-for (const key of ['GEMINI_API_KEY', 'NEXYL_LLM_MODEL', 'OPENAI_API_KEY', 'NEXYL_OPENAI_MODEL', 'NEXYL_LLM_PROVIDER']) {
+for (const key of [
+  'GEMINI_API_KEY', 'NEXYL_LLM_MODEL',
+  'OPENAI_API_KEY', 'NEXYL_OPENAI_MODEL',
+  'GROQ_API_KEY', 'NEXYL_GROQ_MODEL',
+  'ANTHROPIC_API_KEY', 'NEXYL_ANTHROPIC_MODEL',
+  'NEXYL_LLM_PROVIDER',
+]) {
   if (local[key]) wanted[key] = local[key];
 }
 wanted.NEXYL_LLM_MODEL ||= 'gemini-flash-lite-latest';
 
-if (!wanted.GEMINI_API_KEY && !wanted.OPENAI_API_KEY) {
+if (!wanted.GEMINI_API_KEY && !wanted.OPENAI_API_KEY && !wanted.GROQ_API_KEY && !wanted.ANTHROPIC_API_KEY) {
   console.warn('[neon-env] no LLM key in .env — the deployed app will answer with local skills only.');
 }
 
