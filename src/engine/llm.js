@@ -1,8 +1,8 @@
-// Optional LLM provider via the Google Gemini API. If GEMINI_API_KEY is set, Nexl uses it for
+// Optional LLM provider via the Google Gemini API. If GEMINI_API_KEY is set, Nexyl uses it for
 // open-ended questions that none of the local skills could answer. Otherwise this is a no-op.
 
 const SYSTEM_PROMPT =
-  'You are Nexl AI, a friendly, concise assistant inside a web chat app built with JavaScript and PostgreSQL. ' +
+  'You are Nexyl AI, a friendly, concise assistant inside a web chat app built with JavaScript and PostgreSQL. ' +
   'Answer clearly in a few short paragraphs. Use Markdown sparingly. If you are unsure, say so.';
 
 const API_HOST = process.env.LLM_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta';
@@ -13,7 +13,7 @@ function enabled() {
 
 async function complete({ history, memories = [] }) {
   // Pinned 2.5 slugs return 404 for keys issued after their retirement; the -latest alias survives that.
-  const model = process.env.NEXL_LLM_MODEL || 'gemini-flash-lite-latest';
+  const model = process.env.NEXYL_LLM_MODEL || 'gemini-flash-lite-latest';
   const system =
     SYSTEM_PROMPT +
     (memories.length ? '\n\nThings the user asked you to remember:\n' + memories.map((m) => `- ${m}`).join('\n') : '');

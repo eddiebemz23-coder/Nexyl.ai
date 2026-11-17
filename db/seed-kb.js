@@ -1,18 +1,18 @@
-// Starter knowledge base for the Nexl engine. Add your own articles here or via SQL.
+// Starter knowledge base for the Nexyl engine. Add your own articles here or via SQL.
 module.exports = [
   {
-    title: 'What is Nexl AI',
-    tags: ['nexl', 'about', 'assistant'],
+    title: 'What is Nexyl AI',
+    tags: ['nexyl', 'about', 'assistant'],
     body:
-      'Nexl AI is a full-stack JavaScript assistant. The frontend is a vanilla JS chat app, the backend is an Express API, and all data lives in PostgreSQL. ' +
-      'Its brain, the Nexl engine, combines intent detection, a calculator, long-term memory, Postgres full-text knowledge search, and an optional large language model for open-ended questions.',
+      'Nexyl AI is a full-stack JavaScript assistant. The frontend is a vanilla JS chat app, the backend is an Express API, and all data lives in PostgreSQL. ' +
+      'Its brain, the Nexyl engine, combines intent detection, a calculator, long-term memory, Postgres full-text knowledge search, and an optional large language model for open-ended questions.',
   },
   {
-    title: 'How the Nexl engine works',
-    tags: ['nexl', 'engine', 'architecture', 'pipeline'],
+    title: 'How the Nexyl engine works',
+    tags: ['nexyl', 'engine', 'architecture', 'pipeline'],
     body:
       'Every message flows through a pipeline: intent detection first, then specialised skills (math, memory, time, summarize), then knowledge-base retrieval using PostgreSQL full-text search, and finally an optional LLM fallback. ' +
-      'Each reply stores metadata such as the detected intent and sources so you can see why Nexl answered the way it did.',
+      'Each reply stores metadata such as the detected intent and sources so you can see why Nexyl answered the way it did.',
   },
   {
     title: 'What is PostgreSQL',
@@ -48,7 +48,7 @@ module.exports = [
     title: 'Password hashing',
     tags: ['security', 'bcrypt', 'passwords', 'auth'],
     body:
-      'Passwords should never be stored in plain text. Use a slow, salted hash such as bcrypt, scrypt or argon2 so that stolen databases are expensive to crack. Nexl AI uses bcrypt with a cost factor of 10.',
+      'Passwords should never be stored in plain text. Use a slow, salted hash such as bcrypt, scrypt or argon2 so that stolen databases are expensive to crack. Nexyl AI uses bcrypt with a cost factor of 10.',
   },
   {
     title: 'What is JavaScript',
@@ -72,11 +72,11 @@ module.exports = [
     title: 'What is SSE streaming',
     tags: ['sse', 'streaming', 'server-sent events', 'http'],
     body:
-      'Server-Sent Events let a server push a stream of text events to the browser over one HTTP response. Nexl AI uses a streamed response so replies appear token by token instead of all at once.',
+      'Server-Sent Events let a server push a stream of text events to the browser over one HTTP response. Nexyl AI uses a streamed response so replies appear token by token instead of all at once.',
   },
   {
-    title: 'Getting started with Nexl AI',
-    tags: ['nexl', 'help', 'start', 'commands', 'usage'],
+    title: 'Getting started with Nexyl AI',
+    tags: ['nexyl', 'help', 'start', 'commands', 'usage'],
     body:
       'Try these: ask "what is PostgreSQL", calculate "(12 + 8) * 3 / 4", say "remember that my favourite colour is teal", ask "what do you remember about me", ask "what time is it", or type "summarize:" followed by any text.',
   },

@@ -1,4 +1,4 @@
--- Nexl AI database schema (PostgreSQL 13+)
+-- Nexyl AI database schema (PostgreSQL 13+)
 -- Idempotent: safe to run multiple times.
 
 CREATE TABLE IF NOT EXISTS users (
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS messages (
 );
 CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages (conversation_id, id);
 
--- Long-term memory: facts the user asked Nexl to remember.
+-- Long-term memory: facts the user asked Nexyl to remember.
 CREATE TABLE IF NOT EXISTS memories (
   id         BIGSERIAL PRIMARY KEY,
   user_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -45,7 +45,7 @@ CREATE OR REPLACE FUNCTION kb_tsv(title TEXT, tags TEXT[], body TEXT) RETURNS TS
          setweight(to_tsvector('english'::regconfig, coalesce(body, '')), 'C')
 $$ LANGUAGE sql IMMUTABLE PARALLEL SAFE;
 
--- Knowledge base searched by the Nexl engine (Postgres full-text search).
+-- Knowledge base searched by the Nexyl engine (Postgres full-text search).
 CREATE TABLE IF NOT EXISTS kb_articles (
   id    SERIAL PRIMARY KEY,
   title TEXT NOT NULL UNIQUE,

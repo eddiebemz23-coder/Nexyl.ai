@@ -1,4 +1,4 @@
-// Skills: small, deterministic abilities the Nexl engine can route to.
+// Skills: small, deterministic abilities the Nexyl engine can route to.
 const db = require('../db');
 const math = require('./math');
 
@@ -100,11 +100,11 @@ function doSmallTalk(text, ctx) {
   const t = text.trim().toLowerCase();
   const name = ctx.userName ? ctx.userName.split(' ')[0] : 'there';
   if (/^(hi|hello|hey|yo|good (morning|afternoon|evening)|sup)\b/.test(t) && t.length < 40) {
-    return { text: `Hey ${name}! I'm **Nexl**. Ask me a question, give me something to calculate, or tell me something to remember.`, meta: { intent: 'greeting' } };
+    return { text: `Hey ${name}! I'm **Nexyl**. Ask me a question, give me something to calculate, or tell me something to remember.`, meta: { intent: 'greeting' } };
   }
   if (/\b(who are you|what are you|your name|what can you do)\b/.test(t)) {
     return {
-      text: 'I\'m **Nexl AI**, a full-stack JavaScript assistant running on Express and PostgreSQL. I can answer from my knowledge base, do maths, remember facts about you, summarise text, and (when an LLM key is configured) chat about almost anything.',
+      text: 'I\'m **Nexyl AI**, a full-stack JavaScript assistant running on Express and PostgreSQL. I can answer from my knowledge base, do maths, remember facts about you, summarise text, and (when an LLM key is configured) chat about almost anything.',
       meta: { intent: 'identity' },
     };
   }

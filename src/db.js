@@ -3,7 +3,7 @@ const { Pool } = require('pg');
 
 const pool = new Pool({
   connectionString:
-    process.env.DATABASE_URL || 'postgres://postgres@localhost:5432/nexl',
+    process.env.DATABASE_URL || 'postgres://postgres@localhost:5432/nexyl',
   max: 10,
 });
 

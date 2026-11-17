@@ -1,8 +1,8 @@
-# Nexl AI
+# Nexyl.ai
 
 A full-stack JavaScript AI assistant prototype: **vanilla JS frontend**, **Express backend**, **PostgreSQL** database.
 
-Nexl is a hybrid assistant. Its engine routes every message through a pipeline of skills (calculator, memory, summariser, clock, knowledge search) and can optionally hand open-ended questions to a large language model. It is **not** a newly trained neural network. The "AI" is the engine design plus whichever LLM you plug in.
+Nexyl is a hybrid assistant. Its engine routes every message through a pipeline of skills (calculator, memory, summariser, clock, knowledge search) and can optionally hand open-ended questions to a large language model. It is **not** a newly trained neural network. The "AI" is the engine design plus whichever LLM you plug in.
 
 ```
  Browser (public/)                Express API (src/)                    PostgreSQL
@@ -11,7 +11,7 @@ Nexl is a hybrid assistant. Its engine routes every message through a pipeline o
 │ streaming render │ ◀────────── │ /api/...      chat routes │         │ conversations  │
 └──────────────────┘             │        │                  │         │ messages (JSONB)│
                                  │        ▼                  │         │ memories       │
-                                 │  Nexl engine (src/engine) │         │ kb_articles +  │
+                                 │  Nexyl engine (src/engine) │         │ kb_articles +  │
                                  │  skills ─▶ KB search ─▶ LLM│        │  GIN tsvector  │
                                  └──────────────────────────┘         │ feedback       │
                                                                       └────────────────┘
@@ -24,23 +24,50 @@ Requirements: Node 18+ and PostgreSQL 13+.
 ```bash
 npm install
 cp .env.example .env            # then edit DATABASE_URL and JWT_SECRET
-docker compose up -d            # optional: starts Postgres with a "nexl" database
+docker compose up -d            # optional: starts Postgres with a "nexyl" database
 npm run migrate                 # creates tables and seeds the knowledge base
 npm start                       # → http://localhost:3000
 ```
 
-No Docker? Create the database yourself first: `createdb nexl`.
+No Docker? Create the database yourself first: `createdb nexyl`.
 
 Run the end-to-end tests (needs the migrated database): `npm test`
 
-## What Nexl can do
+## Container
+
+The image is just the server — schema and knowledge base stay an explicit step:
+
+```bash
+docker build -t nexyl-ai .
+docker run -p 3000:3000 -e DATABASE_URL=... -e JWT_SECRET=... nexyl-ai
+```
+
+`docker compose` defaults to the database alone, matching the quick start above. To bring up both:
+
+```bash
+JWT_SECRET=$(openssl rand -hex 32) docker compose --profile app up -d --build
+```
+
+That runs `scripts/migrate.js` before starting the server, and interpolates `GEMINI_API_KEY` from your shell or a `.env` file if you want open-ended chat in the container.
+
+## Icons
+
+Every favicon, PWA icon and the `.ico` is generated from the logo geometry — nothing is hand-traced:
+
+```bash
+npm run icons        # writes public/icons/
+```
+
+`scripts/build-icons.js` holds the same path data the page uses, rasterises it with signed distances, and writes PNG, ICO and `site.webmanifest`. Re-run it whenever the logo changes; CI does not check the output for byte-identical regeneration, because PNG encoding is not guaranteed stable across Node builds.
+
+## What Nexyl can do
 
 | Try saying | Skill | How it works |
 |---|---|---|
 | `calculate (12 + 8) * 3 / 4`, `2^10`, `sqrt(144)` | Calculator | Hand-written parser, no `eval` |
 | `remember that my favourite colour is teal` | Memory | Stored per user in `memories` |
 | `what do you remember about me` / `forget everything` | Memory | Reads or clears `memories` |
-| `what is PostgreSQL`, `how does the Nexl engine work` | Knowledge base | Postgres full-text search (`tsvector` + GIN, `ts_rank_cd`) |
+| `what is PostgreSQL`, `how does the Nexyl engine work` | Knowledge base | Postgres full-text search (`tsvector` + GIN, `ts_rank_cd`) |
 | `summarize: <long text>` | Summariser | Extractive, word-frequency scoring |
 | `what time is it` | Clock | Uses your browser's timezone |
 | anything else | LLM (optional) | Enabled by `GEMINI_API_KEY` |
@@ -51,11 +78,11 @@ Every reply stores metadata (`intent`, `sources`, `latency_ms`, `engine`) in `me
 
 | Variable | Purpose | Default |
 |---|---|---|
-| `DATABASE_URL` | Postgres connection string | `postgres://postgres@localhost:5432/nexl` |
+| `DATABASE_URL` | Postgres connection string | `postgres://postgres@localhost:5432/nexyl` |
 | `JWT_SECRET` | Signs login tokens. **Set a long random value.** | random per start |
 | `PORT` | HTTP port | `3000` |
 | `GEMINI_API_KEY` | Enables the LLM fallback for open-ended chat | unset (off) |
-| `NEXL_LLM_MODEL` | Gemini model name used by the fallback | `gemini-flash-lite-latest` |
+| `NEXYL_LLM_MODEL` | Gemini model name used by the fallback | `gemini-flash-lite-latest` |
 | `LLM_BASE_URL` | Override the provider endpoint | `https://generativelanguage.googleapis.com/v1beta` |
 
 ## API
@@ -78,22 +105,27 @@ All routes except `/api/auth/*` and `/api/health` need `Authorization: Bearer <t
 ## Project layout
 
 ```
-db/schema.sql          tables, indexes, weighted tsvector function
-db/seed-kb.js          starter knowledge base articles
-scripts/migrate.js     applies schema + seeds (idempotent)
-scripts/smoke-test.js  end-to-end API + engine tests (npm test)
-src/server.js          Express app, security headers, static hosting
-src/auth.js            JWT + rate limiter
-src/routes/            auth.js, chat.js
-src/engine/            nexl.js (pipeline), skills.js, math.js, llm.js
-public/                index.html, styles.css, app.js
+db/schema.sql             tables, indexes, weighted tsvector function
+db/seed-kb.js             starter knowledge base articles
+scripts/migrate.js        applies schema + seeds (idempotent)
+scripts/smoke-test.js     end-to-end API + engine tests (npm test)
+scripts/build-icons.js    rasterises the logo into public/icons (npm run icons)
+src/server.js             Express app, security headers, static hosting
+src/auth.js               JWT + rate limiter
+src/routes/               auth.js, chat.js
+src/engine/               nexyl.js (pipeline), skills.js, math.js, llm.js
+public/                   index.html, styles.css, app.js
+public/icons/             favicon.ico, PNG sizes, apple-touch, logo.svg, site.webmanifest
+Dockerfile                production image (node:24-alpine, non-root, healthcheck)
+docker-compose.yml        db service, plus an optional `--profile app`
+.github/workflows/ci.yml  migrate + smoke test against Postgres 16
 ```
 
-## Extending Nexl
+## Extending Nexyl
 
 **Add knowledge:** append to `db/seed-kb.js` and run `npm run migrate`, or `INSERT` into `kb_articles`. The search vector is generated automatically.
 
-**Add a skill:** write `async function doThing(message, ctx)` in `src/engine/skills.js` that returns `{ text, meta: { intent } }` or `null`, then add it to the `pipeline` array in `src/engine/nexl.js`. Order matters: the first skill that answers wins.
+**Add a skill:** write `async function doThing(message, ctx)` in `src/engine/skills.js` that returns `{ text, meta: { intent } }` or `null`, then add it to the `pipeline` array in `src/engine/nexyl.js`. Order matters: the first skill that answers wins.
 
 ## Before going to production
 

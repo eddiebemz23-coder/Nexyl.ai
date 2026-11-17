@@ -2,7 +2,7 @@ require('dotenv').config();
 const path = require('path');
 const express = require('express');
 const db = require('./db');
-const { ENGINE_VERSION } = require('./engine/nexl');
+const { ENGINE_VERSION } = require('./engine/nexyl');
 const llm = require('./engine/llm');
 
 const app = express();
@@ -48,7 +48,7 @@ app.use((err, req, res, next) => {
 const PORT = Number(process.env.PORT) || 3000;
 if (require.main === module) {
   app.listen(PORT, () => {
-    console.log(`Nexl AI (${ENGINE_VERSION}) running → http://localhost:${PORT}`);
+    console.log(`Nexyl AI (${ENGINE_VERSION}) running → http://localhost:${PORT}`);
     console.log(`LLM fallback: ${llm.enabled() ? 'enabled (Gemini)' : 'disabled (set GEMINI_API_KEY to enable)'}`);
   });
 }

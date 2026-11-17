@@ -7,7 +7,7 @@
   const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 
   const state = {
-    token: localStorage.getItem('nexl_token'),
+    token: localStorage.getItem('nexyl_token'),
     user: null,
     conversations: [],
     activeId: null,
@@ -26,16 +26,16 @@
   function mountLogos(root = document) {
     const tpl = $('#logo-tpl').innerHTML;
     $$('[data-logo]:not([data-mounted])', root).forEach((slot) => {
-      const id = `nexl-g-${++logoCount}`;
-      slot.innerHTML = tpl.replaceAll('nexl-g', id);
+      const id = `nexyl-g-${++logoCount}`;
+      slot.innerHTML = tpl.replaceAll('nexyl-g', id);
       slot.dataset.mounted = '1';
     });
   }
   function logoEl() {
     const span = document.createElement('span');
     span.className = 'logo';
-    const id = `nexl-g-${++logoCount}`;
-    span.innerHTML = $('#logo-tpl').innerHTML.replaceAll('nexl-g', id);
+    const id = `nexyl-g-${++logoCount}`;
+    span.innerHTML = $('#logo-tpl').innerHTML.replaceAll('nexyl-g', id);
     span.dataset.mounted = '1';
     return span;
   }
@@ -112,7 +112,7 @@
   }
 
   function signOut() {
-    localStorage.removeItem('nexl_token');
+    localStorage.removeItem('nexyl_token');
     Object.assign(state, { token: null, user: null, conversations: [], activeId: null });
     $('#convo-list').replaceChildren();
     clearMessages();
@@ -145,7 +145,7 @@
       const data = await api(`/auth/${state.authMode}`, { method: 'POST', body });
       state.token = data.token;
       state.user = data.user;
-      localStorage.setItem('nexl_token', data.token);
+      localStorage.setItem('nexyl_token', data.token);
       $('#auth-form').reset();
       await enterApp();
     } catch (err) {
@@ -443,7 +443,7 @@
   const SUGGESTIONS = [
     'What is PostgreSQL?',
     'Calculate (12 + 8) * 3 / 4',
-    'How does the Nexl engine work?',
+    'How does the Nexyl engine work?',
     'Remember that my favourite colour is teal',
     'What time is it?',
   ];

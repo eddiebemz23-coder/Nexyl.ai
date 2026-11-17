@@ -1,4 +1,4 @@
-// The Nexl engine: routes each message through an ordered pipeline of skills.
+// The Nexyl engine: routes each message through an ordered pipeline of skills.
 //
 //   message ─▶ forget ─▶ remember ─▶ recall ─▶ summarize ─▶ math ─▶ time
 //           ─▶ small talk ─▶ knowledge base (Postgres FTS) ─▶ LLM (optional) ─▶ fallback
@@ -9,7 +9,7 @@ const db = require('../db');
 const skills = require('./skills');
 const llm = require('./llm');
 
-const ENGINE_VERSION = 'nexl-1.0';
+const ENGINE_VERSION = 'nexyl-1.0';
 
 const FALLBACK =
   "I don't have a good answer for that yet. I'm strongest at: knowledge questions (try \"what is PostgreSQL\"), " +

@@ -65,7 +65,7 @@ async function sse(res) {
 
     console.log('\nEngine');
     const cases = [
-      ['hello', 'greeting', (t) => /Nexl/.test(t)],
+      ['hello', 'greeting', (t) => /Nexyl/.test(t)],
       ['calculate (12 + 8) * 3 / 4', 'math', (t) => t.includes('**15**')],
       ['2^10', 'math', (t) => t.includes('**1024**')],
       ['-3 + sqrt(16) * 2', 'math', (t) => t.includes('**5**')],

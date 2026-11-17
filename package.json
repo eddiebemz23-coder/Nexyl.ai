@@ -1,18 +1,28 @@
 {
-  "name": "nexl-ai",
+  "name": "nexyl.ai",
   "version": "0.1.0",
-  "description": "Nexl AI — a full-stack JavaScript AI assistant prototype (Express + PostgreSQL + vanilla JS frontend)",
+  "description": "Nexyl AI — a full-stack JavaScript AI assistant prototype (Express + PostgreSQL + vanilla JS frontend)",
   "main": "src/server.js",
   "type": "commonjs",
   "scripts": {
     "migrate": "node scripts/migrate.js",
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "test": "node scripts/smoke-test.js"
+    "test": "node scripts/smoke-test.js",
+    "icons": "node scripts/build-icons.js"
   },
   "engines": {
     "node": ">=18"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eddiebemz23-coder/Nexyl.ai.git"
+  },
+  "homepage": "https://github.com/eddiebemz23-coder/Nexyl.ai#readme",
+  "bugs": {
+    "url": "https://github.com/eddiebemz23-coder/Nexyl.ai/issues"
+  },
+  "author": "eddiebemz23-coder",
   "license": "MIT",
   "dependencies": {
     "bcryptjs": "^3.0.3",
