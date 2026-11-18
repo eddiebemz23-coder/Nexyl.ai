@@ -100,6 +100,7 @@
   function showAuth() {
     $('#app-view').hidden = true;
     $('#auth-view').hidden = false;
+    $('#auth-greeting').textContent = dayPhrase();
     setTimeout(() => $('#auth-email').focus(), 0);
   }
   function showApp() {

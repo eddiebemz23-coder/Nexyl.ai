@@ -86,7 +86,8 @@ button { cursor: pointer; }
   border: 1px solid var(--line); border-radius: 20px;
   box-shadow: 0 30px 80px rgba(0, 0, 0, .45);
 }
-.auth-tagline { color: var(--muted); margin: 14px 0 22px; font-size: 14px; }
+.auth-greeting { font-family: var(--display); font-size: 20px; font-weight: 600; letter-spacing: -0.01em; margin: 18px 0 0; }
+.auth-tagline { color: var(--muted); margin: 6px 0 22px; font-size: 14px; }
 .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; margin-bottom: 20px; }
 .tab { border: 0; background: transparent; border-radius: 8px; padding: 8px; color: var(--muted); font-weight: 500; }
 .tab.active { background: var(--panel-2); color: var(--text); }
