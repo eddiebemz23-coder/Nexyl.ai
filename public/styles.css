@@ -236,6 +236,16 @@ button { cursor: pointer; }
 .memories-list li span { flex: 1; overflow-wrap: anywhere; }
 .memories-empty { color: var(--faint); padding: 14px 4px; text-align: center; border: 0 !important; background: none !important; }
 
+/* Install (PWA) */
+.install-btn {
+  display: inline-flex; align-items: center; gap: 6px; flex: none;
+  padding: 6px 12px; font-size: 12.5px; color: var(--teal); border-color: rgba(94, 234, 212, .35);
+}
+.install-btn:hover { border-color: rgba(94, 234, 212, .6); background: rgba(94, 234, 212, .08); }
+.auth-install { width: 100%; justify-content: center; margin-top: 14px; padding: 10px 14px; font-size: 13.5px; }
+.install-steps { margin: 0; padding-left: 18px; display: grid; gap: 8px; color: var(--muted); font-size: 13.5px; line-height: 1.55; }
+.install-steps strong { color: var(--text); }
+
 /* Toast + scrim */
 .toast {
   position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 50;

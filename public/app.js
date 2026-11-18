@@ -516,5 +516,47 @@
     showAuth();
   }
 
+  /* ---------- Install (PWA) ---------- */
+  // Chrome/Edge fire beforeinstallprompt and let us show our own button; Safari and Firefox
+  // never do, so the same button falls back to per-platform instructions.
+  let installPrompt = null;
+  const isStandalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+
+  function refreshInstallButtons() {
+    $$('.install-trigger').forEach((b) => { b.hidden = isStandalone(); });
+  }
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    installPrompt = e;
+    refreshInstallButtons();
+  });
+  window.addEventListener('appinstalled', () => {
+    installPrompt = null;
+    refreshInstallButtons();
+    toast('Nexyl is installed on this device.');
+  });
+
+  async function requestInstall() {
+    if (installPrompt) {
+      installPrompt.prompt();
+      const { outcome } = await installPrompt.userChoice;
+      installPrompt = null;
+      if (outcome === 'accepted') toast('Installing Nexyl…');
+      refreshInstallButtons();
+      return;
+    }
+    $('#install-dialog').showModal();
+  }
+
+  $$('.install-trigger').forEach((b) => b.addEventListener('click', requestInstall));
+  $('#close-install').addEventListener('click', () => $('#install-dialog').close());
+  $('#install-dialog').addEventListener('click', (e) => { if (e.target.id === 'install-dialog') e.target.close(); });
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => { /* the offline shell is optional */ });
+  }
+  refreshInstallButtons();
+
   init();
 })();
