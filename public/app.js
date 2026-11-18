@@ -105,10 +105,9 @@
   function showApp() {
     $('#auth-view').hidden = true;
     $('#app-view').hidden = false;
-    const first = state.user.name.split(' ')[0];
     $('#user-name').textContent = state.user.name;
     $('#user-avatar').textContent = state.user.name.trim().slice(0, 1).toUpperCase();
-    $('#empty-greeting').textContent = `Hi ${first}, how can I help?`;
+    paintGreeting();
   }
 
   function signOut() {
@@ -247,7 +246,21 @@
 
   /* ---------- Messages ---------- */
   const messagesEl = () => $('#messages');
-  function showEmpty(show) { $('#empty').hidden = !show; }
+  function showEmpty(show) {
+    $('#empty').hidden = !show;
+    if (show) paintGreeting();
+  }
+  function dayPhrase() {
+    const h = new Date().getHours();
+    if (h >= 5 && h < 12) return 'Good morning — the early bird catches the worm.';
+    if (h >= 12 && h < 17) return 'Good afternoon — strike while the iron is hot.';
+    if (h >= 17 && h < 22) return 'Good evening — the night is still young.';
+    return 'Burning the midnight oil? The quiet hours are yours.';
+  }
+  function paintGreeting() {
+    const first = state.user ? state.user.name.split(' ')[0] : '';
+    $('#empty-greeting').textContent = first ? `Hi ${first}. ${dayPhrase()}` : dayPhrase();
+  }
   function clearMessages() {
     $$('.msg', messagesEl()).forEach((m) => m.remove());
     showEmpty(true);
@@ -440,14 +453,6 @@
   function closeSidebar() { $('#sidebar').classList.remove('open'); $('#scrim').classList.remove('show'); }
 
   /* ---------- Boot ---------- */
-  const SUGGESTIONS = [
-    'What is PostgreSQL?',
-    'Calculate (12 + 8) * 3 / 4',
-    'How does the Nexyl engine work?',
-    'Remember that my favourite colour is teal',
-    'What time is it?',
-  ];
-
   async function checkHealth() {
     const badge = $('#engine-badge');
     try {
@@ -470,14 +475,6 @@
 
   async function init() {
     mountLogos();
-
-    const chips = $('#chips');
-    SUGGESTIONS.forEach((s) => {
-      const b = el('button', 'chip', s);
-      b.type = 'button';
-      b.addEventListener('click', () => sendMessage(s));
-      chips.append(b);
-    });
 
     $$('.tab').forEach((t) => t.addEventListener('click', () => setAuthMode(t.dataset.tab)));
     $('#auth-form').addEventListener('submit', onAuthSubmit);
